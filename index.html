@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Моніторинг праці — Вхід</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: rgba(255, 255, 255, 0.88);
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --blue: #0071e3;
+      --blue-hover: #0077ed;
+      --line: #dedee3;
+      --red: #c9342f;
+      --green: #248a3d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      display: grid;
+      place-items: center;
+
+      padding: 16px;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+
+      background:
+        radial-gradient(
+          circle at 15% 10%,
+          #e7f2ff,
+          transparent 35%
+        ),
+        var(--bg);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .wrap {
+      width: min(100%, 430px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+
+      margin: 0 auto 13px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 17px;
+
+      background: #1d1d1f;
+      color: white;
+
+      font-weight: 700;
+      font-size: 18px;
+
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.14);
+    }
+
+    h1 {
+      margin: 0;
+
+      font-size: 29px;
+      line-height: 1.1;
+
+      letter-spacing: -0.8px;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .card {
+      padding: 24px;
+
+      border:
+        1px solid rgba(255, 255, 255, 0.9);
+
+      border-radius: 24px;
+
+      background: var(--card);
+
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.09);
+
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+
+      padding: 4px;
+      margin-bottom: 22px;
+
+      background: #ededf0;
+
+      border-radius: 12px;
+    }
+
+    .tab {
+      min-height: 42px;
+
+      padding: 8px 12px;
+
+      border: 0;
+      border-radius: 9px;
+
+      background: transparent;
+
+      color: var(--muted);
+
+      font-weight: 600;
+
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: white;
+      color: var(--text);
+
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.07);
+    }
+
+    .auth-form {
+      display: none;
+      gap: 15px;
+    }
+
+    .auth-form.active {
+      display: grid;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+
+      padding: 0 14px;
+
+      border: 1px solid var(--line);
+      border-radius: 13px;
+
+      background: white;
+      color: var(--text);
+
+      outline: none;
+
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: #79b5ef;
+
+      box-shadow:
+        0 0 0 4px rgba(0, 113, 227, 0.1);
+    }
+
+    .primary {
+      min-height: 48px;
+
+      border: 0;
+      border-radius: 13px;
+
+      background: var(--blue);
+      color: white;
+
+      font-weight: 650;
+
+      cursor: pointer;
+    }
+
+    .primary:active {
+      transform: scale(0.99);
+    }
+
+    .primary:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .link-button {
+      border: 0;
+
+      padding: 4px;
+
+      background: transparent;
+
+      color: var(--blue);
+
+      font-size: 13px;
+
+      cursor: pointer;
+    }
+
+    .message {
+      margin: 0;
+
+      border-radius: 11px;
+
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .message:not(:empty) {
+      padding: 11px 12px;
+    }
+
+    .message.error {
+      color: var(--red);
+      background: #fff0ef;
+    }
+
+    .message.success {
+      color: var(--green);
+      background: #edf9f0;
+    }
+
+    .footer {
+      margin-top: 17px;
+
+      text-align: center;
+
+      color: var(--muted);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 375px) {
+      .card {
+        padding: 19px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="wrap">
+
+    <header class="header">
+
+      <div class="logo">
+        МП
+      </div>
+
+      <h1>
+        Моніторинг праці
+      </h1>
+
+      <p class="subtitle">
+        Робочий простір команди
+      </p>
+
+    </header>
+
+
+    <section
+      class="card"
+      aria-label="Авторизація"
+    >
+
+      <div class="tabs">
+
+        <button
+          class="tab active"
+          id="loginTab"
+          type="button"
+        >
+          Увійти
+        </button>
+
+        <button
+          class="tab"
+          id="signupTab"
+          type="button"
+        >
+          Реєстрація
+        </button>
+
+      </div>
+
+
+      <!-- ВХІД -->
+
+      <form
+        id="loginForm"
+        class="auth-form active"
+      >
+
+        <div class="field">
+
+          <label for="loginEmail">
+            Робочий email
+          </label>
+
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="name@company.com"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="loginPassword">
+            Пароль
+          </label>
+
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            minlength="8"
+            placeholder="Ваш пароль"
+            required
+          >
+
+        </div>
+
+
+        <button
+          class="primary"
+          id="loginButton"
+          type="submit"
+        >
+          Увійти
+        </button>
+
+
+        <button
+          class="link-button"
+          id="resetButton"
+          type="button"
+        >
+          Забули пароль?
+        </button>
+
+
+        <p
+          class="message"
+          id="loginMessage"
+          aria-live="polite"
+        ></p>
+
+      </form>
+
+
+      <!-- РЕЄСТРАЦІЯ -->
+
+      <form
+        id="signupForm"
+        class="auth-form"
+      >
+
+        <div class="field">
+
+          <label for="fullName">
+            Ім’я та прізвище
+          </label>
+
+          <input
+            id="fullName"
+            type="text"
+            autocomplete="name"
+            minlength="2"
+            placeholder="Олексій Петренко"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="signupEmail">
+            Робочий email
+          </label>
+
+          <input
+            id="signupEmail"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="name@company.com"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="signupPassword">
+            Пароль
+          </label>
+
+          <input
+            id="signupPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            placeholder="Мінімум 8 символів"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="confirmPassword">
+            Повторіть пароль
+          </label>
+
+          <input
+            id="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            placeholder="Повторіть пароль"
+            required
+          >
+
+        </div>
+
+
+        <button
+          class="primary"
+          id="signupButton"
+          type="submit"
+        >
+          Створити акаунт
+        </button>
+
+
+        <p
+          class="message"
+          id="signupMessage"
+          aria-live="polite"
+        ></p>
+
+      </form>
+
+    </section>
+
+
+    <p class="footer">
+      Захищена авторизація через Supabase
+    </p>
+
+  </main>
+
+
+  <script>
+
+    /* ==============================
+       SUPABASE
+       ============================== */
+
+    const SUPABASE_URL =
+      "https://douvdhxbtpvjepexlrwn.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_NAFD7J-B98BSKTgnBh-6Cg_CRLQ68Fm";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    /* ==============================
+       ELEMENTS
+       ============================== */
+
+    const loginTab =
+      document.getElementById(
+        "loginTab"
+      );
+
+    const signupTab =
+      document.getElementById(
+        "signupTab"
+      );
+
+    const loginForm =
+      document.getElementById(
+        "loginForm"
+      );
+
+    const signupForm =
+      document.getElementById(
+        "signupForm"
+      );
+
+    const loginMessage =
+      document.getElementById(
+        "loginMessage"
+      );
+
+    const signupMessage =
+      document.getElementById(
+        "signupMessage"
+      );
+
+    const loginButton =
+      document.getElementById(
+        "loginButton"
+      );
+
+    const signupButton =
+      document.getElementById(
+        "signupButton"
+      );
+
+
+    /* ==============================
+       UI
+       ============================== */
+
+    function showMessage(
+      element,
+      text = "",
+      type = ""
+    ) {
+
+      element.textContent = text;
+
+      element.className =
+        `message ${type}`.trim();
+
+    }
+
+
+    function setButtonLoading(
+      button,
+      loading,
+      loadingText,
+      normalText
+    ) {
+
+      button.disabled = loading;
+
+      button.textContent =
+        loading
+          ? loadingText
+          : normalText;
+
+    }
+
+
+    function showLogin() {
+
+      loginForm.classList.add(
+        "active"
+      );
+
+      signupForm.classList.remove(
+        "active"
+      );
+
+      loginTab.classList.add(
+        "active"
+      );
+
+      signupTab.classList.remove(
+        "active"
+      );
+
+      showMessage(loginMessage);
+      showMessage(signupMessage);
+
+    }
+
+
+    function showSignup() {
+
+      signupForm.classList.add(
+        "active"
+      );
+
+      loginForm.classList.remove(
+        "active"
+      );
+
+      signupTab.classList.add(
+        "active"
+      );
+
+      loginTab.classList.remove(
+        "active"
+      );
+
+      showMessage(loginMessage);
+      showMessage(signupMessage);
+
+    }
+
+
+    loginTab.addEventListener(
+      "click",
+      showLogin
+    );
+
+    signupTab.addEventListener(
+      "click",
+      showSignup
+    );
+
+
+    /* ==============================
+       ВХІД
+       ============================== */
+
+    loginForm.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+        showMessage(
+          loginMessage
+        );
+
+        const email =
+          document
+            .getElementById(
+              "loginEmail"
+            )
+            .value
+            .trim();
+
+        const password =
+          document
+            .getElementById(
+              "loginPassword"
+            )
+            .value;
+
+
+        setButtonLoading(
+          loginButton,
+          true,
+          "Вхід…",
+          "Увійти"
+        );
+
+
+        try {
+
+          const { error } =
+            await supabaseClient.auth
+              .signInWithPassword({
+                email,
+                password
+              });
+
+
+          if (error) {
+
+            throw error;
+
+          }
+
+
+          showMessage(
+            loginMessage,
+            "Вхід виконано успішно.",
+            "success"
+          );
+
+
+          /*
+            Поки dashboard ще не підключений,
+            залишаємо користувача на цій сторінці.
+            Пізніше тут буде перехід у застосунок.
+          */
+
+
+        } catch (error) {
+
+          console.error(
+            "Login error:",
+            error
+          );
+
+          showMessage(
+            loginMessage,
+            translateError(error),
+            "error"
+          );
+
+        } finally {
+
+          setButtonLoading(
+            loginButton,
+            false,
+            "",
+            "Увійти"
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==============================
+       РЕЄСТРАЦІЯ
+       ============================== */
+
+    signupForm.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+        showMessage(
+          signupMessage
+        );
+
+
+        const fullName =
+          document
+            .getElementById(
+              "fullName"
+            )
+            .value
+            .trim();
+
+
+        const email =
+          document
+            .getElementById(
+              "signupEmail"
+            )
+            .value
+            .trim();
+
+
+        const password =
+          document
+            .getElementById(
+              "signupPassword"
+            )
+            .value;
+
+
+        const confirmPassword =
+          document
+            .getElementById(
+              "confirmPassword"
+            )
+            .value;
+
+
+        if (
+          password !==
+          confirmPassword
+        ) {
+
+          showMessage(
+            signupMessage,
+            "Паролі не збігаються.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (
+          password.length < 8
+        ) {
+
+          showMessage(
+            signupMessage,
+            "Пароль має містити щонайменше 8 символів.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setButtonLoading(
+          signupButton,
+          true,
+          "Створення…",
+          "Створити акаунт"
+        );
+
+
+        try {
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient.auth
+              .signUp({
+
+                email,
+
+                password,
+
+                options: {
+
+                  emailRedirectTo:
+                    window.location.origin,
+
+                  data: {
+
+                    full_name:
+                      fullName
+
+                  }
+
+                }
+
+              });
+
+
+          if (error) {
+
+            throw error;
+
+          }
+
+
+          if (data.session) {
+
+            showMessage(
+              signupMessage,
+              "Акаунт створено. Ви успішно увійшли.",
+              "success"
+            );
+
+          } else {
+
+            showMessage(
+              signupMessage,
+              "Акаунт створено. Перевірте електронну пошту та підтвердьте email.",
+              "success"
+            );
+
+          }
+
+
+          signupForm.reset();
+
+
+        } catch (error) {
+
+          console.error(
+            "Signup error:",
+            error
+          );
+
+
+          showMessage(
+            signupMessage,
+            translateError(error),
+            "error"
+          );
+
+
+        } finally {
+
+          setButtonLoading(
+            signupButton,
+            false,
+            "",
+            "Створити акаунт"
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ==============================
+       ВІДНОВЛЕННЯ ПАРОЛЯ
+       ============================== */
+
+    document
+      .getElementById(
+        "resetButton"
+      )
+      .addEventListener(
+        "click",
+        async function() {
+
+          const email =
+            document
+              .getElementById(
+                "loginEmail"
+              )
+              .value
+              .trim();
+
+
+          if (!email) {
+
+            showMessage(
+              loginMessage,
+              "Спочатку введіть свій email.",
+              "error"
+            );
+
+            return;
+
+          }
+
+
+          try {
+
+            const { error } =
+              await supabaseClient.auth
+                .resetPasswordForEmail(
+                  email,
+                  {
+
+                    redirectTo:
+                      window.location.origin
+
+                  }
+                );
+
+
+            if (error) {
+
+              throw error;
+
+            }
+
+
+            showMessage(
+              loginMessage,
+              "Лист для відновлення пароля надіслано.",
+              "success"
+            );
+
+
+          } catch (error) {
+
+            console.error(
+              "Password reset error:",
+              error
+            );
+
+
+            showMessage(
+              loginMessage,
+              translateError(error),
+              "error"
+            );
+
+          }
+
+        }
+      );
+
+
+    /* ==============================
+       ПОМИЛКИ УКРАЇНСЬКОЮ
+       ============================== */
+
+    function translateError(
+      error
+    ) {
+
+      const message =
+        String(
+          error?.message || ""
+        ).toLowerCase();
+
+
+      if (
+        message.includes(
+          "invalid login credentials"
+        )
+      ) {
+
+        return "Невірний email або пароль.";
+
+      }
+
+
+      if (
+        message.includes(
+          "email not confirmed"
+        )
+      ) {
+
+        return "Спочатку підтвердьте email через лист.";
+
+      }
+
+
+      if (
+        message.includes(
+          "already registered"
+        )
+      ) {
+
+        return "Користувач з таким email уже зареєстрований.";
+
+      }
+
+
+      if (
+        message.includes(
+          "rate limit"
+        )
+      ) {
+
+        return "Забагато спроб. Спробуйте трохи пізніше.";
+
+      }
+
+
+      return (
+        error?.message ||
+        "Сталася помилка. Спробуйте ще раз."
+      );
+
+    }
+
+  </script>
+
+</body>
+</html>
